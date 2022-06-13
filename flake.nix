@@ -6,5 +6,5 @@
             description = "Python project with poetry, vscode, and direnv";
             path = ./python/poetry;
         };
-    }
+    };
 }
