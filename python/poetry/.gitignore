@@ -16,3 +16,4 @@ venv.bak/
 
 # Nix built files
 result/**
+result
