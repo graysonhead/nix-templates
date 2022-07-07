@@ -1,0 +1,7 @@
+target/**
+result-*/**
+result*
+result-bin
+.direnv/**
+.vscode/**
+.cargo
