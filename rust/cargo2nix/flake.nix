@@ -31,7 +31,12 @@
                     packageFun = import ./Cargo.nix;
                 };
 
-                workspaceShell = rustPkgs.workspaceShell {};
+                workspaceShell = rustPkgs.workspaceShell {
+                    packages = [
+                        cargo2nix.packages.${system}.cargo2nix
+                        pkgs.rustfmt
+                    ];
+                };
 
                 ci = pkgs.rustBuilder.runTests rustPkgs.workspace.cargo2nix {};
 
