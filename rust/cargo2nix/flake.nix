@@ -27,14 +27,15 @@
                 };
 
                 rustPkgs = pkgs.rustBuilder.makePackageSet {
-                    rustChannel = "1.60.0";
+                    rustVersion = "1.61.0";
                     packageFun = import ./Cargo.nix;
+                    extraRustComponents = ["clippy"];
                 };
 
                 workspaceShell = rustPkgs.workspaceShell {
-                    packages = [
+                    packages = with pkgs; [
+                        rustfmt
                         cargo2nix.packages.${system}.cargo2nix
-                        pkgs.rustfmt
                     ];
                 };
 
