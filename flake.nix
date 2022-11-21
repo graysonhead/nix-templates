@@ -13,6 +13,6 @@
         rust-bevy = {
             description = "Rust and Bevy";
             path = ./rust/bevy;
-        }
+        };
     };
 }
