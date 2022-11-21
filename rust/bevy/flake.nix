@@ -87,7 +87,7 @@
                     fixupPhase = ''
                       wrapProgram $out/bin/${program_name} \
                         --prefix LD_LIBRARY_PATH : ${pkgs.lib.makeLibraryPath runtime-deps} \
-                        --set CARGO_MANIFEST_DIR $out/share/bevy_nix_vscode_template
+                        --set CARGO_MANIFEST_DIR $out/share/changeme
                       mkdir -p $out/share/${program_name}
                       cp -a assets $out/share/${program_name}'';
                     patchPhase = ''

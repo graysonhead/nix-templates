@@ -1,6 +1,6 @@
 #!/bin/sh
 
-read -p "Please enter the project name: " project_name
+read -p "Please enter the project name (make sure it matches your folder name): " project_name
 echo "====================================="
 echo "Setting up git"
 echo "====================================="
