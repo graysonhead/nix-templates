@@ -10,5 +10,9 @@
             description = "Rust project with cargo2nix";
             path = ./rust/cargo2nix;
         };
+        rust-bevy = {
+            description = "Rust and Bevy";
+            path = ./rust/bevy;
+        }
     };
 }
