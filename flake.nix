@@ -16,7 +16,7 @@
         };
         rust-naersk = {
             description = "Rust Naersk";
-            path = ./rust/naersk
+            path = ./rust/naersk;
         };
         devShell = pkgs.mkShell {
           nativeBuildInputs = with pkgs; [
