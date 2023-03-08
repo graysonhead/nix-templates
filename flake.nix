@@ -14,5 +14,18 @@
             description = "Rust and Bevy";
             path = ./rust/bevy;
         };
+        rust-naersk = {
+            description = "Rust Naersk";
+            path = ./rust/naersk
+        };
+        devShell = pkgs.mkShell {
+          nativeBuildInputs = with pkgs; [
+            rustc
+            cargo
+            clippy
+            nixpkgs-fmt
+            cmake
+          ] ++ buildInputs ++ nativeBuildInputs;
+        };
     };
 }
