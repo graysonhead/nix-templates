@@ -32,6 +32,9 @@
           nativeBuildInputs = with pkgs; [
             nixpkgs-fmt
             cmake
+            rustc
+            cargo
+            clippy
           ] ++ buildInputs ++ nativeBuildInputs;
         };
       }
