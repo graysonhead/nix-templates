@@ -23,6 +23,8 @@
         # For `nix build` & `nix run`:
         defaultPackage = naersk'.buildPackage {
           src = ./.;
+          nativeBuildInputs = nativeBuildInputs;
+          buildInputs = buildInputs;
         };
 
         # For `nix develop`:
