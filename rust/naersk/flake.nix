@@ -38,13 +38,24 @@
       in
       rec {
         # Build this with `nix build`, run it with `nix run`
-        defaultPackage = naersk'.buildPackage {
-          # Naersk will look for a `Cargo.toml` in this directory
-          src = ./.;
-          # Our buildinputs from above are specified here
-          nativeBuildInputs = nativeBuildInputs;
-          buildInputs = buildInputs;
-        };
+        defaultPackage = packages.app;
+        packages =
+          {
+            app = naersk'.buildPackage {
+              # Naersk will look for a `Cargo.toml` in this directory
+              src = ./.;
+              # Our buildinputs from above are specified here
+              nativeBuildInputs = nativeBuildInputs;
+              buildInputs = buildInputs;
+            };
+            contianer = pkgs.dockerTools.buildImage
+              {
+                name = "app";
+                config = {
+                  entrypoint = [ "${packages.app}/bin/app" ];
+                };
+              };
+          };
 
         # This will be entered by direnv, or by manually running `nix shell`. This ensures
         # that our development environment will have all the correct tools at the correct
@@ -52,13 +63,14 @@
         devShell = pkgs.mkShell {
           # Here we add any tools that we want in our dev-shell but aren't required to build
           # our application.
-          nativeBuildInputs = with pkgs; [
-            nixpkgs-fmt
-            cmake
-            rustc
-            cargo
-            clippy
-          ] ++ buildInputs ++ nativeBuildInputs;
+          nativeBuildInputs = with pkgs;
+            [
+              nixpkgs-fmt
+              cmake
+              rustc
+              cargo
+              clippy
+            ] ++ buildInputs ++ nativeBuildInputs;
           # The above line merges our buildInputs into the devshell, so we have them when
           # using cargo tools from inside our devshell.
         };

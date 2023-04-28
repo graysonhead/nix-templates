@@ -14,6 +14,12 @@ nix flake new --template github:graysonhead/nix-templates#python-poetry ./projec
 nix flake new --template github:graysonhead/nix-templates#rust-naersk ./project-folder
 ```
 
+Or, if you want to use a nightly version of Rust:
+
+```
+nix flake new --template github:graysonhead/nix-templates#rust-naersk-nightly ./project-folder
+```
+
 ## Rust Cargo2nix
 
 ```

@@ -27,6 +27,10 @@
           description = "Rust Naersk";
           path = ./rust/naersk;
         };
+        rust-naersk-nightly = {
+          description = "Rust Naersk Nightly";
+          path = ./rust/naersk-nightly;
+        };
       };
       devShell = {
         x86_64-linux = pkgs.mkShell {
