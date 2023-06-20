@@ -1,114 +1,65 @@
 {
   inputs = {
-    nixpkgs.url = github:NixOS/nixpkgs/nixpkgs-unstable;
-    rust-overlay.url = "github:oxalica/rust-overlay";
-    nur.url = github:polygon/nur.nix;
+    flake-utils.url = "github:numtide/flake-utils";
     naersk.url = "github:nix-community/naersk";
+    rust-overlay.url = "github:oxalica/rust-overlay";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
   };
 
-  outputs = { self, rust-overlay, nixpkgs, nur, naersk }:
-    let
-      systems = [
-        "aarch64-linux"
-        "i686-linux"
-        "x86_64-linux"
-      ];
-      overlays = [ (import rust-overlay) ];
-      program_name = "changeme";
-    in
-    builtins.foldl'
-      (outputs: system:
-
-        let
-          overlays = [ (import rust-overlay) ];
-          pkgs = import nixpkgs {
-            inherit overlays system;
-          };
-
-          rust-bin = pkgs.rust-bin.selectLatestNightlyWith
+  outputs = { self, flake-utils, naersk, nixpkgs, rust-overlay }:
+    flake-utils.lib.eachDefaultSystem (system:
+      let
+        overlays = [ (import rust-overlay) ];
+        pkgs = (import nixpkgs) {
+          inherit system overlays;
+        };
+        naersk' = pkgs.callPackage naersk { };
+        buildInputs = with pkgs; [
+          vulkan-loader
+          xorg.libXcursor
+          xorg.libXi
+          xorg.libXrandr
+          alsa-lib
+          udev
+          pkgconfig
+        ];
+        nativeBuildInputs = with pkgs; [
+          (rust-bin.selectLatestNightlyWith
             (toolchain: toolchain.default.override {
-              targets = [ "wasm32-unknown-unknown" ];
-              extensions = [ "rust-src" ];
-            });
-          naersk-lib = naersk.lib.${system}.override {
-            cargo = rust-bin;
-            rustc = rust-bin;
+              extensions = [ "rust-src" "clippy" ];
+            }))
+        ];
+        all_deps = with pkgs; [
+          cargo-flamegraph
+          cargo-expand
+          nixpkgs-fmt
+          cmake
+        ] ++ buildInputs ++ nativeBuildInputs;
+      in
+      rec {
+        # For `nix build` & `nix run`:
+        defaultPackage = packages.bevy_template;
+        packages = rec {
+          bevy_template = naersk'.buildPackage {
+            src = ./.;
+            nativeBuildInputs = nativeBuildInputs;
+            buildInputs = buildInputs;
+            postInstall = ''
+              cp -r assets $out/bin/
+            '';
+            # Disables dynamic linking when building with Nix
+            cargoBuildOptions = x: x ++ [ "--no-default-features" ];
           };
+        };
 
-          rust-dev-deps = with pkgs; [
-            rust-analyzer
-            rustfmt
-            lldb
-            cargo-geiger
-            nur.packages.${system}.wasm-server-runner
-            renderdoc
-          ];
-          build-deps = with pkgs; [
-            pkgconfig
-            mold
-            clang
-            makeWrapper
-          ];
-          runtime-deps = with pkgs; [
-            alsa-lib
-            udev
-            xorg.libX11
-            xorg.libXcursor
-            xorg.libXrandr
-            xorg.libXi
-            xorg.libxcb
-            libGL
-            vulkan-loader
-            vulkan-headers
-          ];
-        in
-        {
-          devShell.${system} =
-            let
-              all_deps = runtime-deps ++ build-deps ++ rust-dev-deps ++ [ rust-bin ];
-            in
-            pkgs.mkShell {
-              buildInputs = all_deps;
-              LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath (all_deps);
-              PROGRAM_NAME = program_name;
-              shellHook = ''
-                export CARGO_MANIFEST_DIR=$(pwd)
-              '';
-            };
-          packages.${system} =
-            {
-              app = naersk-lib.buildPackage
-                {
-                  pname = program_name;
-                  root = ./.;
-                  buildInputs = runtime-deps;
-                  nativeBuildInputs = build-deps;
-                  overrideMain = attrs: {
-                    fixupPhase = ''
-                      wrapProgram $out/bin/${program_name} \
-                        --prefix LD_LIBRARY_PATH : ${pkgs.lib.makeLibraryPath runtime-deps} \
-                        --set CARGO_MANIFEST_DIR $out/share/changeme
-                      mkdir -p $out/share/${program_name}
-                      cp -a assets $out/share/${program_name}'';
-                    patchPhase = ''
-                      sed -i s/\"dynamic\"// Cargo.toml
-                    '';
-                  };
-                };
-              wasm = self.packages.${system}.app.overrideAttrs
-                (final: prev: {
-                  CARGO_BUILD_TARGET = "wasm32-unknown-unknown";
-                  fixupPhase = '''';
-                });
-            };
-          defaultPackage.${system} = self.packages.${system}.app;
-          apps.${system}.wasm = {
-            type = "app";
-            program = ''${pkgs.writeShellScript "wasm-run" "${nur.packages.${system}.wasm-server-runner}/bin/wasm-server-runner ${self.packages.${system}.wasm}/bin/${program_name}.wasm"}'';
-          };
-        }
-      )
-      { }
-      systems;
-
+        # For `nix develop`:
+        devShell = pkgs.mkShell {
+          nativeBuildInputs = all_deps;
+          shellHook = ''
+            export CARGO_MANIFEST_DIR=$(pwd)
+            export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${pkgs.lib.makeLibraryPath all_deps}"
+          '';
+        };
+      }
+    );
 }
