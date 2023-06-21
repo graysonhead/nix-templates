@@ -42,6 +42,6 @@ fn spawn_scene(mut commands: Commands, assets: Res<AssetServer>) {
 
 fn rotate_scene(mut scene_object: Query<(Entity, &Rotate, &mut Transform)>) {
     for (_, _, mut transform) in &mut scene_object {
-        transform.rotate_y(0.1);
+        transform.rotate_y(0.05);
     }
 }
